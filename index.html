@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>X 账号风险检测器 by Grok</title>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <style>
+    :root {
+      --primary: #1DA1F2;
+      --danger: #E0245E;
+      --warning: #F5A623;
+      --success: #17BF63;
+      --dark: #15202B;
+      --light: #F7F9FA;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; font-family: 'Segoe UI', sans-serif; }
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 40px auto;
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
+      font-size: 2rem;
+    }
+    .subtitle {
+      text-align: center;
+      opacity: 0.8;
+      margin-bottom: 30px;
+    }
+    .input-group {
+      display: flex;
+      margin-bottom: 20px;
+      border-radius: 50px;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    input {
+      flex: 1;
+      padding: 16px 20px;
+      border: none;
+      font-size: 1.1rem;
+      outline: none;
+    }
+    button {
+      padding: 0 30px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover { background: #0d8bd9; }
+    .loading {
+      text-align: center;
+      padding: 40px;
+      font-size: 1.2rem;
+      display: none;
+    }
+    .result { display: none; margin-top: 30px; }
+    .score-circle {
+      width: 120px; height: 120px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: bold;
+      margin: 20px auto;
+      color: white;
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    }
+    .low { background: var(--success); }
+    .medium { background: var(--warning); }
+    .high { background: var(--danger); }
+
+    .card {
+      background: rgba(255,255,255,0.15);
+      border-radius: 15px;
+      padding: 20px;
+      margin: 15px 0;
+      backdrop-filter: blur(5px);
+    }
+    .card h3 {
+      margin-bottom: 10px;
+      color: #fff;
+    }
+    .risk-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .export-btn {
+      margin-top: 20px;
+      text-align: center;
+    }
+    .export-btn button {
+      background: #fff;
+      color: var(--dark);
+      padding: 10px 20px;
+      border-radius: 50px;
+    }
+    footer {
+      text-align: center;
+      margin-top: 50px;
+      opacity: 0.7;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>🚨 X 账号风险检测器</h1>
+  <p class="subtitle">基于公开数据 + AI 分析，秒出风险报告</p>
+
+  <div class="input-group">
+    <input type="text" id="handle" placeholder="输入 X 用户名，如 @Starlight1_123" />
+    <button onclick="checkRisk()">检测</button>
+  </div>
+
+  <div class="loading" id="loading">🔍 正在分析账号数据...</div>
+
+  <div class="result" id="result">
+    <div class="score-circle" id="scoreCircle">85</div>
+    <h2 style="text-align:center" id="riskLevel">低风险</h2>
+
+    <div class="card">
+      <h3>📊 风险详情</h3>
+      <div id="riskDetails"></div>
+    </div>
+
+    <div class="card">
+      <h3>⚡ 快速建议</h3>
+      <div id="suggestions"></div>
+    </div>
+
+    <div class="export-btn">
+      <button onclick="exportPDF()">📄 导出 PDF 报告</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Powered by <a href="https://x.ai" target="_blank" style="color:#fff">Grok API</a> | 仅供参考，非官方工具
+</footer>
+
+<script>
+async function checkRisk() {
+  const handle = document.getElementById('handle').value.trim().replace('@', '');
+  if (!handle) return alert('请输入 X 用户名');
+
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('result').style.display = 'none';
+
+  try {
+    // 模拟调用 Grok API 或第三方 X 数据接口
+    // 实际部署请替换为真实 API（见下方说明）
+    const mockData = await mockAnalyze(handle);
+    
+    displayResult(mockData);
+  } catch (err) {
+    alert('检测失败：' + err.message);
+  } finally {
+    document.getElementById('loading').style.display = 'none';
+  }
+}
+
+// 模拟分析函数（实际请接入真实 API）
+async function mockAnalyze(handle) {
+  await new Promise(r => setTimeout(r, 1800)); // 模拟延迟
+
+  // 模拟风险数据（可替换为真实 API 返回）
+  const data = {
+    username: `@${handle}`,
+    avatar: `https://unpkg.com/avatars@${handle.charCodeAt(0) % 10}/avatar.svg`,
+    verified: handle === 'Starlight1_123',
+    followers: Math.floor(Math.random() * 20000) + 1000,
+    accountAgeDays: Math.floor(Math.random() * 600) + 100,
+    spamScore: Math.random() > 0.7 ? '高' : Math.random() > 0.4 ? '中' : '低',
+    risks: [
+      { name: '垃圾信息风险', level: '低', desc: '发帖频率正常，无重复内容' },
+      { name: '账号被黑风险', level: '低', desc: '无异常登录记录' },
+      { name: '内容违规风险', level: '中', desc: '推广工具需注意合规性' },
+      { name: '钓鱼链接风险', level: '低', desc: '未检测到可疑域名' }
+    ],
+    score: Math.floor(Math.random() * 30) + 70, // 70-100
+    suggestions: [
+      '启用两步验证（2FA）',
+      '避免频繁发布相同链接',
+      '定期检查登录设备',
+      '内容添加免责声明'
+    ]
+  };
+
+  // 计算综合评分
+  let base = 90;
+  if (data.accountAgeDays < 180) base -= 15;
+  if (!data.verified) base -= 10;
+  if (data.spamScore !== '低') base -= 20;
+  data.score = Math.max(0, Math.min(100, base));
+
+  return data;
+}
+
+function displayResult(data) {
+  const score = data.score;
+  const level = score >= 80 ? '低风险' : score >= 60 ? '中风险' : '高风险';
+  const color = score >= 80 ? 'low' : score >= 60 ? 'medium' : 'high';
+
+  document.getElementById('scoreCircle').textContent = score;
+  document.getElementById('scoreCircle').className = `score-circle ${color}`;
+  document.getElementById('riskLevel').textContent = level;
+
+  // 风险详情
+  const details = document.getElementById('riskDetails');
+  details.innerHTML = data.risks.map(r => `
+    <div class="risk-item">
+      <span>${r.name}</span>
+      <span style="color:${r.level==='高'?'#E0245E':r.level==='中'?'#F5A623':'#17BF63'}">
+        ${r.level}风险
+      </span>
+    </div>
+  `).join('');
+
+  // 建议
+  document.getElementById('suggestions').innerHTML = data.suggestions.map(s => 
+    `<div style="margin:8px 0; padding-left:20px; position:relative">
+      <span style="position:absolute;left:0">✓</span> ${s}
+    </div>`
+  ).join('');
+
+  document.getElementById('result').style.display = 'block';
+  window.resultData = data; // 用于导出
+}
+
+// 导出 PDF
+function exportPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const data = window.resultData;
+
+  doc.setFont('helvetica');
+  doc.setFontSize(20);
+  doc.text('X 账号风险检测报告', 105, 20, { align: 'center' });
+
+  doc.setFontSize(12);
+  doc.text(`账号: ${data.username}`, 20, 40);
+  doc.text(`检测时间: ${new Date().toLocaleString()}`, 20, 48);
+
+  doc.setFontSize(16);
+  doc.text(`风险评分: ${data.score}（${data.score>=80?'低':data.score>=60?'中':'高'}风险）`, 20, 65);
+
+  let y = 85;
+  doc.setFontSize(12);
+  doc.text('风险项：', 20, y); y += 10;
+  data.risks.forEach(r => {
+    doc.text(`• ${r.name}: ${r.level}风险`, 30, y); y += 8;
+  });
+
+  y += 10;
+  doc.text('建议：', 20, y); y += 10;
+  data.suggestions.forEach(s => {
+    doc.text(`✓ ${s}`, 30, y); y += 8;
+  });
+
+  doc.save(`${data.username}_风险报告.pdf`);
+}
+</script>
+
+</body>
+</html>
